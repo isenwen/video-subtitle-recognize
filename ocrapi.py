@@ -29,4 +29,3 @@ def jd_general_ocr(image, conf):
         'secretkey': conf['SECRET_KEY']
     }
     return post_request(ocr_url, params, image).json()
-
