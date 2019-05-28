@@ -33,7 +33,7 @@ def main(video_name, video_suffix):
 
         if current_frame % duration == 0:  # 每 duration 帧进行存储操作
             cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), jpg_quality])[1].\
-                tofile(image_dir + str(current_frame).zfill(5) + '.jpg')
+                tofile(image_dir + str(current_frame).zfill(6) + '.jpg')
             print(("Now: frame %d, saved: %d frame(s), process: %d%%" %
                    (current_frame, saved_frames, (current_frame * 100) // frame_count)).ljust(60, ' '), end='\r')
             saved_frames += 1
