@@ -25,22 +25,24 @@ def main(video_name, video_suffix):
         print("Video open error")
         return False
 
-    duration = int(cv.get(5) * conf['split_duration'])  # 视频帧计数间隔频率 = 帧率 * 切片时间间隔(四舍五入)
+    duration = int(cv.get(5) * conf['split_duration'])  # 间隔频率 = 帧率 * 切片时间间隔(四舍五入)
     frame_count = int(cv.get(cv2.CAP_PROP_FRAME_COUNT))
 
     while retval:   # 循环读取视频帧
         retval, frame = cv.read()
 
-        if current_frame % duration == 0:  # 每隔 duration 帧进行存储操作
+        if current_frame % duration == 0:  # 每 duration 帧进行存储操作
             cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), jpg_quality])[1].\
                 tofile(image_dir + str(current_frame).zfill(5) + '.jpg')
+            print(("Now: frame %d, saved: %d frame(s), process: %d%%" %
+                   (current_frame, saved_frames, (current_frame * 100) // frame_count)).ljust(60, ' '), end='\r')
             saved_frames += 1
 
-        print(("Now: frame %d, saved: %d frame(s), process: %d%%" %
-              (current_frame, saved_frames, (current_frame * 100) // frame_count)).ljust(60, ' '), end='\r')
         current_frame += 1
         cv2.waitKey(1)
 
+    print(("Now: frame %d, saved: %d frame(s), process: %d%%" %
+           (current_frame, saved_frames, (current_frame * 100) // frame_count)).ljust(60, ' '), end='\r')
     cv.release()
     print("\nSaved: %d frame(s)" % saved_frames)
     return True

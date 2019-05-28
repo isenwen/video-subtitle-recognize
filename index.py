@@ -7,19 +7,25 @@ import getsubtitle
 
 
 def main():
+    if not(os.path.exists("video")):
+        os.mkdir("video")
+
     if not(os.path.exists("video_frames")):
         os.mkdir("video_frames")
 
     if not(os.path.exists("output")):
         os.mkdir("output")
 
+    video_name = ""
+    video_suffix = ""
+
     while True:
         os.system("cls")
-        print("----------Select video----------")
+        print("----------Select Video----------")
         video_list = os.listdir("video")
 
         if len(video_list) < 1:
-            print("Nothing found")
+            print("Nothing found\n\n")
             print("Process finished")
             input()
             return
@@ -38,7 +44,7 @@ def main():
             break
 
     start = time.time()
-    print("\n\n----------Video division----------")
+    print("\n\n----------Video Division----------")
     print("Start video division")
 
     if not getframe.main(video_name, video_suffix):
@@ -51,7 +57,7 @@ def main():
     print("Time: %.2fs\n\n" % (time.time() - start))
 
     start2 = time.time()
-    print("----------Subtitle analysis----------")
+    print("----------Subtitle Analysis----------")
     print("Start subtitle analysis")
 
     if not getsubtitle.main(video_name, video_suffix):

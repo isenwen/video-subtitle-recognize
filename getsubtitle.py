@@ -4,8 +4,6 @@ import os
 import re
 import difflib
 import time
-import cv2
-import numpy
 import ocrapi
 import config
 
@@ -42,8 +40,8 @@ def main(video_name, video_suffix):
     global conf
     conf = config.get_config(video_name, video_suffix)
     output = open(conf['output_dir'] + video_name + '.txt', mode='w')
+    probability = conf['probability']
     frames = sorted(filter(is_image, os.listdir(conf['image_dir'])))
-    image_height = cv2.imdecode(numpy.fromfile(conf['image_dir'] + frames[0], dtype=numpy.uint8), 0).shape[0]
     length = len(frames)
     count = 1
     position_data = []
@@ -51,19 +49,19 @@ def main(video_name, video_suffix):
     output.write('----------逐帧OCR结果----------\n\n')
 
     for image_name in frames:
-        output.write(image_name + ' starts\n')
+        output.write(image_name + '\n')
         ocr_result, status = get_ocr(image_name)
 
         # Fail then retry
         while status == "QPS Limit":
-            print(('%s failed for QPS limit, retry...... process %d%%' %
+            print(('%s failed for QPS limit, retry...... process: %d%%' %
                    (image_name, (count * 100) // length)).ljust(60, ' '), end='\r')
             time.sleep(0.1)  # 线程暂停避免触发QPS限制
             ocr_result, status = get_ocr(image_name)
 
         if status != "OK" and status == "No Content":
-            output.write(image_name + ' passed (nothing recognized)\n\n')
-            print(('%s passed (nothing recognized), process %d%%' %
+            output.write('passed (nothing recognized)\n\n')
+            print(('%s passed (nothing recognized), process: %d%%' %
                    (image_name, (count * 100) // length)).ljust(60, ' '), end='\r')
             count += 1
             time.sleep(0.1)  # 线程暂停避免触发QPS限制
@@ -75,6 +73,10 @@ def main(video_name, video_suffix):
             return False
 
         for word in ocr_result:
+            if float(word['probability']) < probability:
+                output.write('passed (lower than probability limit)\n')
+                continue
+
             top = int(word['location']['y'])
             height = int(word['location']['height'])
             w = word['text']
@@ -117,8 +119,8 @@ def main(video_name, video_suffix):
             output.write('Height: ' + str(word['location']['height']) + '\n')
 
         count += 1
-        output.write(image_name + ' finished\n\n')
-        print(('%s finished, process %d%%' % (image_name, (count * 100) // length)).ljust(60, ' '), end='\r')
+        output.write('\n\n')
+        print(('%s finished, process: %d%%' % (image_name, (count * 100) // length)).ljust(60, ' '), end='\r')
         time.sleep(0.1)  # 线程暂停避免触发QPS限制
 
     output.write('----------OCR分析信息----------\n\n')
@@ -129,8 +131,7 @@ def main(video_name, video_suffix):
     max_group = []
 
     for group in position_data:
-        if group['top'] > 0.6666 * image_height and group['totalNum'] > len(max_group):
-            max_group = group['words']
+        if group['totalNum'] > len(max_group): max_group = group['words']
 
     all_words = ','.join(max_group)
 
@@ -139,7 +140,7 @@ def main(video_name, video_suffix):
 
     output.write('----------程序运行时间----------\n\n')
     end = time.time()
-    output.write('Running time: ' + str(end - start) + '\n')
+    output.write('Running time: %.2fs' % (end - start) + '\n')
 
     output.close()
     return True
