@@ -37,7 +37,7 @@ Python 3.x，Python 2.x 的许多语法和 3.x 不一样，无法使用
 OpenCV，pip install opencv-python
 
 ## 获取代码
-方法一：git clone https://github.com/drsanwujiang/video-bottom-subtitle-recognize.git
+方法一：git clone https://github.com/drsanwujiang/video-subtitle-recognize.git
 
 方法二：右上角 - clone or download - download zip
 
