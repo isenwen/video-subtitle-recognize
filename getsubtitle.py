@@ -39,17 +39,15 @@ def main(video_name, video_suffix):
     start = time.time()
     global conf
     conf = config.get_config(video_name, video_suffix)
-    output = open(conf['output_dir'] + video_name + '.txt', mode='w')
     probability = conf['probability']
     frames = sorted(filter(is_image, os.listdir(conf['image_dir'])))
+    ocr_content = ""
     length = len(frames)
     count = 1
     position_data = []
 
-    output.write('----------逐帧OCR结果----------\n\n')
-
     for image_name in frames:
-        output.write(image_name + '\n')
+        ocr_content += image_name + '\n'
         ocr_result, status = get_ocr(image_name)
 
         # Fail then retry
@@ -60,7 +58,7 @@ def main(video_name, video_suffix):
             ocr_result, status = get_ocr(image_name)
 
         if status != "OK" and status == "No Content":
-            output.write('passed (nothing recognized)\n\n')
+            ocr_content += 'passed (nothing recognized)\n\n'
             print(('%s passed (nothing recognized), process: %d%%' %
                    (image_name, (count * 100) // length)).ljust(60, ' '), end='\r')
             count += 1
@@ -69,12 +67,11 @@ def main(video_name, video_suffix):
         elif status != "OK":
             print(('%s FAILED! Error code: %s' % (image_name, status)).ljust(60, ' '))
             print('Check config / image info, and review document')
-            output.close()
             return False
 
         for word in ocr_result:
             if float(word['probability']) < probability:
-                output.write('passed (lower than probability limit)\n')
+                ocr_content += 'passed (lower than probability limit)\n'
                 continue
 
             top = int(word['location']['y'])
@@ -114,33 +111,30 @@ def main(video_name, video_suffix):
                     'words': [w]
                 })
 
-            output.write('Words: ' + w + '\n')
-            output.write('Top: ' + str(word['location']['y']) + '\n')
-            output.write('Height: ' + str(word['location']['height']) + '\n')
+            ocr_content += 'Words: ' + w + '\nTop: ' + str(word['location']['y']) + '\nHeight: ' + \
+                       str(word['location']['height']) + '\n'
 
         count += 1
-        output.write('\n\n')
+        ocr_content += '\n'
         print(('%s finished, process: %d%%' % (image_name, (count * 100) // length)).ljust(60, ' '), end='\r')
         time.sleep(0.1)  # 线程暂停避免触发QPS限制
 
-    output.write('----------OCR分析信息----------\n\n')
+    group_info = ""
 
     for group in position_data:
-        output.write(str(group) + '\n')
+        group_info += str(group) + '\n\n'
 
     max_group = []
 
     for group in position_data:
         if group['totalNum'] > len(max_group): max_group = group['words']
 
-    all_words = ','.join(max_group)
-
-    output.write('\n----------字幕分析结果----------\n\n')
-    output.write(all_words + '\n\n')
-
-    output.write('----------程序运行时间----------\n\n')
+    subtitle = ','.join(max_group) + '\n\n'
+    output = open(conf['output_dir'] + video_name + '.txt', mode='w')  # 写入文件
+    output.write('----------字幕识别结果----------\n\n%s' % subtitle)
+    output.write('----------OCR分析结果----------\n\n%s' % ocr_content)
+    output.write('----------字幕分组结果----------\n\n%s' % group_info)
     end = time.time()
-    output.write('Running time: %.2fs' % (end - start) + '\n')
-
+    output.write('----------程序运行时间----------\n\nRunning time: %.2fs' % (end - start) + '\n')
     output.close()
     return True
