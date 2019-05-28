@@ -1,52 +1,49 @@
-# 是什么？
-利用OCR、OpenCV等提取视频硬字幕
+# 这是什么？
+利用OCR、OpenCV提取视频底部字幕
 
 # 做了什么
 从视频提取硬字幕要做以下事情：
 ## 1、视频切割
-把视频切成若干张包含字幕的静态图片（这里是等距切，密度在config里splitDuration配置）。应在考虑调用成本的前提下尽量细切，保证字幕都切到（不用怕重复，这有去重）
+把视频切成若干张包含字幕的静态图片（默认每秒1张，间隔是 config 里的 split_duration）。应在考虑调用成本的前提下尽量细切，保证字幕都切到。
+
 ## 2、图片OCR
-百度OCR能返回所有识别结果的坐标。
+京东OCR能返回识别的文字和对应坐标。
+
 ## 3、去重
 去重有两个目的：
-一是防止结果重复；二是能把固定位置的文字收敛（比如台标），避免字幕定位错误。
+一是防止结果重复
+二是能把固定位置的文字收敛（比如台标），避免字幕定位错误。
+
 ## 4、字幕定位
-每张图可能识别出若干组文字（每组都有位置信息），在获得所有切图OCR结果后，我们需要确定哪些是字幕的内容。
+每张图可能识别出若干组文字（每组都有位置信息），在获得所有切图的OCR结果后，我们需要确定哪些是字幕的内容。
 
 这里有两个假设：
-1. 字幕的纵向位置基本不变
+1. 字幕的纵向位置基本不变
 2. 字幕是整个视频中同一位置不同内容文字量最大的部分
 
-有这两个假设：
+有这两个假设之后：
 1. 把top相近的识别结果分成一组
-2. 去重后量最大的组就是字幕组
-
-## 5、字幕分段（Todo）
+2. 去重后字幕量最大的，且位于视频下三分之一部分的组就是字幕组
+（原作者的代码测试后发现，京东OCR可能会识别出大量无用的背景中的词组，使得字幕量最大的反而是废弃组，所以在此粗暴地加了 top > 0.6666 * image_height 的过滤条件）
 
 # 使用指南
 ## 环境
-python：mac电脑自带，windows请自行百度安装
+Python 3.x，Python 2.x 的许多语法和 3.x 不一样，无法使用
+OpenCV，pip install opencv-python
+
 ## 获取代码
-方法一：git clone https://github.com/HenryLulu/video-to-text-ocr-demo.git
+方法一：git clone https://github.com/drsanwujiang/video-bottom-subtitle-recognize.git
 方法二：右上角 - clone or download - download zip
-## 申请百度OCR
-https://console.bce.baidu.com/ai/#/ai/ocr/overview/index
-在百度云开放平台注册，创建文字识别应用得到APP_ID、API_KEY、SECRET_KEY，就可以用了。
-我们用到的是：通用文字识别（含位置信息版）。每天前500次调用免费。
+
+## 申请京东OCR
+https://neuhub.jd.com/ai/api/ocr/general
+在京东AI开放平台注册，创建通用文字识别应用得到 APP_KEY 、 SECRET_KEY ，就可以用了。
+每天免费调用50000次，QPS是2。
+
 ## 配置
-在代码目录新建一个 config.py 文件，贴入以下内容（配置项替换成自己的）
+修改 config.py 文件在 'APP_KEY' 、 'SECRET_KEY' 后填写自己的 APP_KEY 、 SECRET_KEY
+修改 jpg_quality 改变图片质量，在保证字幕清晰的情况下减小可以增加效率，但太小会频繁触发QPS限制
 
-    def getConfig(videoname):
-        return {
-            'APP_ID': '百度OCR APP_ID',
-            'API_KEY': '百度OCR APP_KEY',
-            'SECRET_KEY': '百度OCR SECRET_KEY',
-            'videoDir': './video/' + videoname + '.mp4',
-            'imgDir': './videoframes/' + videoname,
-            'outputDir': './output/' + videoname + '/',
-
-            'splitDuration': 1
-        }
 ## 执行
 创建上面配置的 videoDir 中的文件夹，比如这里的 video，把视频文件放进去。
 修改 index.py video 为某个视频文件名，执行 python index.py

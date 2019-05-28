@@ -1,7 +1,70 @@
+# -*- coding: UTF-8 -*-
+
+import os
+import time
 import getframe
-import ocr
+import getsubtitle
 
-video = '2'
 
-# getframe.main(video)
-ocr.main(video)
+def main():
+    if not(os.path.exists("video_frames")):
+        os.mkdir("video_frames")
+
+    if not(os.path.exists("output")):
+        os.mkdir("output")
+
+    while True:
+        os.system("cls")
+        print("----------Select video----------")
+        video_list = os.listdir("video")
+
+        if len(video_list) < 1:
+            print("Nothing found")
+            print("Process finished")
+            input()
+            return
+
+        for video in video_list:
+            print("%d.%s" % (video_list.index(video) + 1, video))
+
+        try:
+            index = int(input("\nInput index: "))
+        except ValueError:
+            continue
+
+        if 0 < index <= len(video_list):
+            video_name = video_list[index - 1][: video_list[index - 1].rfind(".")]
+            video_suffix = video_list[index - 1][video_list[index - 1].rfind("."):]
+            break
+
+    start = time.time()
+    print("\n\n----------Video division----------")
+    print("Start video division")
+
+    if not getframe.main(video_name, video_suffix):
+        print("Video division FAILED!")
+        print("Process finished")
+        input()
+        return
+
+    print("Video division finished")
+    print("Time: %.2fs\n\n" % (time.time() - start))
+
+    start2 = time.time()
+    print("----------Subtitle analysis----------")
+    print("Start subtitle analysis")
+
+    if not getsubtitle.main(video_name, video_suffix):
+        print("\nSubtitle analysis FAILED!")
+    else:
+        print("\nSubtitle analysis finished")
+
+    print("Time: %.2fs\n\n" % (time.time() - start2))
+
+    print("Process finished")
+    print("Time: %.2fs" % (time.time() - start))
+    input()
+    return
+
+
+main()
