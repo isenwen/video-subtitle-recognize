@@ -44,7 +44,7 @@ def main():
             break
 
     start = time.time()
-    print("\n\n----------Video Division----------")
+    print("\n----------Video Division----------")
     print("Start video division")
 
     if not getframe.main(video_name, video_suffix):
@@ -54,7 +54,7 @@ def main():
         return
 
     print("Video division finished")
-    print("Time: %.2fs\n\n" % (time.time() - start))
+    print("Time: %.2fs\n" % (time.time() - start))
 
     start2 = time.time()
     print("----------Subtitle Analysis----------")
@@ -65,7 +65,7 @@ def main():
     else:
         print("\nSubtitle analysis finished")
 
-    print("Time: %.2fs\n\n" % (time.time() - start2))
+    print("Time: %.2fs\n" % (time.time() - start2))
 
     print("Process finished")
     print("Time: %.2fs" % (time.time() - start))
