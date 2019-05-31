@@ -1,7 +1,6 @@
 # 这是什么？
 利用OCR、OpenCV识别、提取视频字幕
 
-
 # 做了什么
 从视频提取硬字幕要做以下事情：
 
@@ -29,9 +28,10 @@
 1. 把top相近的识别结果分成一组
 2. 去重后字幕量最大的就是字幕组
 
-
 # 使用指南
 ## 环境
+Windows / Linux 系统（macOS 未经测试，但是理论上没有问题）
+
 Python 3.x，Python 2.x 的许多语法和 3.x 不一样，无法使用
 
 OpenCV，pip install opencv-python
@@ -63,3 +63,5 @@ probability 默认0.66 OCR返回的可信度的下限，可信度低于此下限
 创建 video 文件夹，把视频文件放进去。
 
 执行 index.py
+
+等待脚本执行完成，打开 output 文件夹查看结果

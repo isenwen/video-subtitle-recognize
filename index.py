@@ -1,28 +1,39 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import sys
 import time
+import config
 import getframe
 import getsubtitle
 
 
+def clear():
+    if sys.platform.find("win") > -1:
+        os.system("cls")
+    else:
+        print()
+
+
 def main():
-    if not(os.path.exists("video")):
-        os.mkdir("video")
+    conf = config.get_config("", "")
 
-    if not(os.path.exists("video_frames")):
-        os.mkdir("video_frames")
+    if not(os.path.exists(conf['video_dir'])):
+        os.mkdir(conf['video_dir'])
 
-    if not(os.path.exists("output")):
-        os.mkdir("output")
+    if not(os.path.exists(conf['video_frames'])):
+        os.mkdir(conf['video_frames'])
+
+    if not(os.path.exists(conf['output_dir'])):
+        os.mkdir(conf['output_dir'])
 
     video_name = ""
     video_suffix = ""
 
     while True:
-        os.system("cls")
+        clear()
         print("----------Select Video----------")
-        video_list = os.listdir("video")
+        video_list = os.listdir(conf['video_dir'])
 
         if len(video_list) < 1:
             print("Nothing found\n\n")
@@ -73,4 +84,5 @@ def main():
     return
 
 
-main()
+if __name__ == "__main__":
+    main()
