@@ -3,9 +3,10 @@
 import os
 import sys
 import time
-import config
+
 import getframe
 import getsubtitle
+from config import Config
 
 
 def clear():
@@ -16,16 +17,16 @@ def clear():
 
 
 def main():
-    conf = config.get_config("", "")
+    Config.set_path()
 
-    if not(os.path.exists(conf['video_dir'])):
-        os.mkdir(conf['video_dir'])
+    if not (os.path.exists(Config.get_value('video_dir'))):
+        os.mkdir(Config.get_value('video_dir'))
 
-    if not(os.path.exists(conf['video_frames'])):
-        os.mkdir(conf['video_frames'])
+    if not (os.path.exists(Config.get_value('video_frames'))):
+        os.mkdir(Config.get_value('video_frames'))
 
-    if not(os.path.exists(conf['output_dir'])):
-        os.mkdir(conf['output_dir'])
+    if not (os.path.exists(Config.get_value('output_dir'))):
+        os.mkdir(Config.get_value('output_dir'))
 
     video_name = ""
     video_suffix = ""
@@ -33,7 +34,7 @@ def main():
     while True:
         clear()
         print("----------Select Video----------")
-        video_list = os.listdir(conf['video_dir'])
+        video_list = os.listdir(Config.get_value('video_dir'))
 
         if len(video_list) < 1:
             print("Nothing found\n\n")
@@ -54,11 +55,13 @@ def main():
             video_suffix = video_list[index - 1][video_list[index - 1].rfind("."):]
             break
 
+    Config.set_path(video_name, video_suffix)
+
     start = time.time()
     print("\n----------Video Division----------")
     print("Start video division")
 
-    if not getframe.main(video_name, video_suffix):
+    if not getframe.main():
         print("Video division FAILED!")
         print("Process finished")
         input()
@@ -71,7 +74,7 @@ def main():
     print("----------Subtitle Analysis----------")
     print("Start subtitle analysis")
 
-    if not getsubtitle.main(video_name, video_suffix):
+    if not getsubtitle.main():
         print("\nSubtitle analysis FAILED!")
     else:
         print("\nSubtitle analysis finished")

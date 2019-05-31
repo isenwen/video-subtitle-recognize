@@ -13,9 +13,9 @@
 ## 3、去重
 去重有两个目的：
 
-一是防止结果重复
+1.防止结果重复
 
-二是能把固定位置的文字收敛（比如台标），避免字幕定位错误。
+2.能把固定位置的文字收敛（比如台标），避免字幕定位错误。
 
 ## 4、字幕定位
 每张图可能识别出若干组文字（每组都有位置信息），在获得所有切图的OCR结果后，我们需要确定哪些是字幕的内容。
@@ -37,7 +37,9 @@ Python 3.x，Python 2.x 的许多语法和 3.x 不一样，无法使用
 OpenCV，pip install opencv-python
 
 ## 获取代码
-方法一：git clone https://github.com/drsanwujiang/video-subtitle-recognize.git
+方法一：
+
+    git clone https://github.com/drsanwujiang/video-subtitle-recognize.git
 
 方法二：右上角 - clone or download - download zip
 
@@ -53,11 +55,11 @@ https://neuhub.jd.com/ai/api/ocr/general
 
 参数说明：
 
-split_duration 默认1 视频切片频率，字幕密度低的情况下可以调至2，提高效率
-
-jpg_quality 默认40 改变图片质量，在保证字幕清晰的情况下减小质量可以提高网络效率，但太小可能频繁触发QPS限制
-
-probability 默认0.66 OCR返回的可信度的下限，可信度低于此下限的识别结果会被废弃，根据需要可适当放宽
+    split_duration 默认1 视频切片频率，字幕密度低的情况下可以调至2，提高效率
+    jpg_quality 默认40 改变图片质量，在保证字幕清晰的情况下减小质量可以提高网络效率，但太小可能频繁触发QPS限制
+    probability 默认0.66 OCR返回的可信度的下限，可信度低于此下限的识别结果会被废弃，根据需要可适当放宽
+    subtitle_top_rate 默认0.66 字幕范围倍率，（此倍率 * 视频高度）以下的文字被认为是字幕，即默认下三分之一的文字是字幕
+    remove_duplicate 默认False 强制去除所有重复，一般不需要启用
 
 ## 执行
 创建 video 文件夹，把视频文件放进去。

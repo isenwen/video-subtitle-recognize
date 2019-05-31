@@ -1,11 +1,12 @@
 # -*- coding: UTF-8 -*-
 
+import difflib
 import os
 import re
-import difflib
 import time
+
 import ocrapi
-import config
+from config import Config
 
 
 def get_file_content(file_path):
@@ -18,29 +19,31 @@ def is_image(f):
 
 
 def get_ocr(image_name):
-    image = get_file_content(conf['image_dir'] + image_name)
-    res = ocrapi.jd_general_ocr(image, conf)
+    image = get_file_content(Config.get_value('image_dir') + image_name)
+    res = ocrapi.jd_general_ocr(image)
     code = int(res['code'])
     if code != 10000:
         if code in [10043, 10044]:  # 达到OPS上限
-            return res['msg'], "QPS Limit"
+            return res['msg'], -1
         return res['msg'], res['code']  # 系统级错误
     else:
         code = int(res['result']['code'])
+
         if code == 0:
-            return res['result']['resultData'], "OK"
+            return res['result']['resultData'], 0  # OK
         elif code == 13004:
-            return res['result']['message'], "No Content"  # 无内容被识别
+            return res['result']['message'], -2  # 无内容被识别
+        elif code == 13005:
+            return res['result']['message'], -3  # 其他错误
         else:
             return res['result']['message'], res['result']['code']  # 业务级错误
 
 
-def main(video_name, video_suffix):
+def main():
     start = time.time()
-    global conf
-    conf = config.get_config(video_name, video_suffix)
-    probability = conf['probability']
-    frames = sorted(filter(is_image, os.listdir(conf['image_dir'])))
+    probability = Config.get_value('probability')
+    remove_duplicate = Config.get_value('remove_duplicate')
+    frames = sorted(filter(is_image, os.listdir(Config.get_value('image_dir'))))
     ocr_content = ""
     length = len(frames)
     count = 1
@@ -50,27 +53,33 @@ def main(video_name, video_suffix):
         ocr_content += image_name + '\n'
         ocr_result, status = get_ocr(image_name)
 
-        # Fail then retry
-        while status == "QPS Limit":
+        while status == -1:  # QPS限制，重试
             print(('%s failed for QPS limit, retry...... process: %d%%' %
                    (image_name, (count * 100) // length)).ljust(60, ' '), end='\r')
             time.sleep(0.1)  # 线程暂停避免触发QPS限制
             ocr_result, status = get_ocr(image_name)
 
-        if status != "OK" and status == "No Content":
+        if status == -2:  # 无内容被识别
             ocr_content += 'passed (nothing recognized)\n\n'
             print(('%s passed (nothing recognized), process: %d%%' %
                    (image_name, (count * 100) // length)).ljust(60, ' '), end='\r')
             count += 1
             time.sleep(0.1)  # 线程暂停避免触发QPS限制
             continue
-        elif status != "OK":
+        elif status == -3:  # 其他错误
+            ocr_content += 'passed (other error)\n\n'
+            print(('%s passed (other error), process: %d%%' %
+                   (image_name, (count * 100) // length)).ljust(60, ' '), end='\r')
+            count += 1
+            time.sleep(0.1)  # 线程暂停避免触发QPS限制
+            continue
+        elif status != 0:
             print(('%s FAILED! Error code: %s' % (image_name, status)).ljust(60, ' '))
             print('Check config / image info, and review document')
             return False
 
         for word in ocr_result:
-            if float(word['probability']) < probability:
+            if float(word['probility']) < probability:
                 ocr_content += 'passed (lower than probability limit)\n'
                 continue
 
@@ -122,15 +131,23 @@ def main(video_name, video_suffix):
     group_info = ""
 
     for group in position_data:
+        # 强制去重
+        if remove_duplicate:
+            sorted_list = list(set(group["words"]))
+            sorted_list.sort(key=group["words"].index)
+            group["words"] = sorted_list
+            group["totalNum"] = len(sorted_list)
+
         group_info += str(group) + '\n\n'
 
     max_group = []
 
     for group in position_data:
-        if group['totalNum'] > len(max_group): max_group = group['words']
+        if group["top"] > Config.get_value("subtitle_top") and group['totalNum'] > len(max_group):
+            max_group = group['words']
 
     subtitle = ','.join(max_group) + '\n\n'
-    output = open(conf['output_dir'] + video_name + '.txt', mode='w')  # 写入文件
+    output = open(Config.get_value('output_dir') + Config.get_value("video_name") + '.txt', mode='w')  # 写入文件
     output.write('----------字幕识别结果----------\n\n%s' % subtitle)
     output.write('----------OCR分析结果----------\n\n%s' % ocr_content)
     output.write('----------字幕分组结果----------\n\n%s' % group_info)

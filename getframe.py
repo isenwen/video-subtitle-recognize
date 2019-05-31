@@ -1,15 +1,17 @@
 # -*- coding: UTF-8 -*-
 
-import cv2
 import os
-import config
+
+import cv2
+
+from config import Config
 
 
-def main(video_name, video_suffix):
-    conf = config.get_config(video_name, video_suffix)
-    video_path = conf['video_path']
-    image_dir = conf['image_dir']
-    jpg_quality = conf['jpg_quality']
+def main():
+    video_path = Config.get_value("video_path")
+    image_dir = Config.get_value('image_dir')
+    jpg_quality = Config.get_value('jpg_quality')
+    split_duration = Config.get_value('split_duration')
 
     if not(os.path.exists(image_dir)):
         os.mkdir(image_dir)
@@ -25,8 +27,11 @@ def main(video_name, video_suffix):
         print("Video open error")
         return False
 
-    duration = int(cv.get(5) * conf['split_duration'])  # 间隔频率 = 帧率 * 切片时间间隔(四舍五入)
-    frame_count = int(cv.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration = int(cv.get(cv2.CAP_PROP_FPS) * split_duration)  # 间隔频率 = 帧率 * 切片时间间隔(四舍五入)
+    frame_count = int(cv.get(cv2.CAP_PROP_FRAME_COUNT))  # 视频总帧数
+    video_width = int(cv.get(cv2.CAP_PROP_FRAME_WIDTH))  # 视频宽度
+    video_height = int(cv.get(cv2.CAP_PROP_FRAME_HEIGHT))  # 视频高度
+    Config.set_video_props(video_width, video_height)
 
     while retval:   # 循环读取视频帧
         retval, frame = cv.read()

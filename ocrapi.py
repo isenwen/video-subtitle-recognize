@@ -1,8 +1,11 @@
 # -*- coding: UTF-8 -*-
 
-import requests
 import hashlib
 import time
+
+import requests
+
+from config import Config
 
 
 # sign
@@ -20,12 +23,12 @@ def post_request(url, params, img):
     return requests.post(url, params=params, data=img)
 
 
-def jd_general_ocr(image, conf):
+def jd_general_ocr(image):
     ocr_url = "https://aiapi.jd.com/jdai/ocr_universal"
     params = {
         'type': 'json',
         'content': 'json string',
-        'appkey': conf['APP_KEY'],
-        'secretkey': conf['SECRET_KEY']
+        'appkey': Config.get_value('APP_KEY'),
+        'secretkey': Config.get_value('SECRET_KEY')
     }
     return post_request(ocr_url, params, image).json()
