@@ -79,7 +79,7 @@ def main():
             return False
 
         for word in ocr_result:
-            if float(word['probility']) < probability:
+            if float(word['probability']) < probability:
                 ocr_content += 'passed (lower than probability limit)\n'
                 continue
 
